@@ -1,4 +1,4 @@
-Add LoadPath "C:\Users\Jonathan\source\repos\Software Foundations\Logical Foundations".
+Add LoadPath "C:\Users\Jonathan\source\repos\PLT-Coq\Software Foundations\Logical Foundations".
 Require Export Induction.
 
 Module NatList.
@@ -351,8 +351,253 @@ Proof.
     simpl. rewrite -> IHl'. reflexivity.
 Qed.
 
+(* Exercise list_exercises *)
+
+Theorem app_nil_r : forall l : natlist, l ++ [] = l.
+Proof.
+  induction l.
+  - reflexivity.
+  - intros. simpl. rewrite -> IHl. reflexivity.
+Qed.
+
+Theorem rev_app_distr:  forall l_1 l_2 : natlist,
+  rev (l_1 ++ l_2 ) = rev l_2 ++ rev l_1.
+Proof.
+  induction l_1.
+  - intros. 
+    rewrite nil_app.
+    simpl. 
+    rewrite app_nil_r.
+    reflexivity.
+  - intros.
+    simpl.
+    rewrite IHl_1.
+    rewrite app_assoc.
+    reflexivity.
+Qed.
+
+Theorem rev_involutive : forall l : natlist, 
+  rev (rev l) = l.
+Proof.
+  induction l as [| n l' IHl'].
+  - reflexivity.
+  - simpl. rewrite rev_app_distr. rewrite IHl'. reflexivity.
+Qed.
+
+Theorem app_assoc4 : forall l_1 l_2 l_3 l_4 : natlist,
+  l_1 ++ (l_2 ++ (l_3 ++ l_4)) = ((l_1 ++ l_2) ++ l_3) ++ l_4.
+Proof.
+  intros. rewrite -> app_assoc. rewrite -> app_assoc. reflexivity.
+Qed.
+
+Lemma nonzeros_app : forall l_1 l_2 : natlist,
+  nonzeros (l_1 ++ l_2) = (nonzeros l_1) ++ (nonzeros l_2).
+Proof.
+  intros. induction l_1 as [| n l_1' IHl1'].
+  + reflexivity.
+  + destruct n as [| n']. 
+    - simpl. rewrite -> IHl1'. reflexivity.
+    - simpl. rewrite -> IHl1'. reflexivity.
+Qed.
+
+(* Exercises beq_natlist *)
+Fixpoint beq_natlist (l_1 l_2 : natlist) : bool :=
+  match l_1 with
+  | [] => beq_nat (length l_2) 0
+  | h_1 :: t_1 => match l_2 with
+                  | [] => false
+                  | h_2 :: t_2 => match beq_nat h_1 h_2 with
+                                  | true => beq_natlist t_1 t_2
+                                  | false => false
+                  end
+  end
+end.
+
+Example test_beq_natlist : (beq_natlist nil nil = true).
+Proof. reflexivity. Qed.
+
+Example test_beq_natlist2 : beq_natlist [1;2;3] [1;2;3] = true.
+Proof. reflexivity. Qed.
+
+Example test_beq_natlist3: beq_natlist [1;2;3] [1;2;4] = false.
+Proof. reflexivity. Qed.
+
+Theorem beq_nat_refl: forall n, beq_nat n n = true.
+Proof.
+  induction n as [| n' IHn'].
+  - reflexivity.
+  - simpl. rewrite -> IHn'. reflexivity.
+Qed.
 
 
+Theorem beq_natlist_refl : forall l: natlist,
+  true = beq_natlist l l.
+Proof.
+  induction l as [|n' l' IHl'].
+  + reflexivity.
+  + simpl. rewrite -> beq_nat_refl. rewrite -> IHl'. reflexivity.
+Qed.
 
+(* Exercise  count_member_nonzero *)
+Theorem count_member_nonzero : forall (s: bag),
+  leb 1 (count 1 (1 :: s)) = true.
+Proof.
+  intros. reflexivity.
+Qed.
 
+Theorem ble_n_Sn: forall n : nat,
+  leb n (S n) = true.
+Proof.
+  intros n. induction n as [| n' IHn'].
+  - simpl. reflexivity.
+  - simpl. rewrite IHn'. reflexivity.
+Qed.
 
+Theorem remove_does_not_increase_count : forall (s: bag),
+  leb (count 0 (remove_one 0 s)) (count 0 s) = true.
+Proof. 
+  induction s as [|n s' IHs'].
+  - reflexivity.
+  - induction n as [|n' IHn'].
+    + simpl. rewrite -> ble_n_Sn. reflexivity.
+    + simpl. rewrite -> IHs'. reflexivity.
+Qed.
+
+Theorem rev_injective : forall (l_1 l_2 : natlist),
+  rev l_1 = rev l_2 -> l_1 = l_2.
+Proof.
+  intros. 
+  rewrite <- rev_involutive.
+  rewrite <- H.
+  rewrite -> rev_involutive. 
+  reflexivity.
+Qed.
+
+Fixpoint nth_bad (l: natlist) (n: nat) : nat :=
+  match l with
+  | nil => 42
+  | a :: l' => match beq_nat n 0 with
+                | true => a
+                | false => nth_bad l' (pred n)
+  end
+end.
+
+Inductive natoption : Type :=
+  | Some : nat -> natoption
+  | None : natoption.
+
+Fixpoint nth_error (l: natlist) (n:nat) : natoption :=
+  match l with
+  | nil => None
+  | a :: l' => match beq_nat n O with 
+                | true => Some a
+                | false => nth_error l' (pred n)
+  end
+end.
+
+Example test_nth_error1 : nth_error [4;5;6;7] 0 = Some 4.
+Proof. reflexivity. Qed.
+
+Example test_nth_error2: nth_error [4;5;6;7] 3 = Some 7.
+Proof. reflexivity. Qed.
+
+Example test_nth_error3 : nth_error [4;5;6;7] 9 = None.
+Proof. reflexivity. Qed.
+
+Fixpoint nth_error' (l: natlist) (n : nat) : natoption :=
+  match l with
+  | nil => None
+  | a :: l' => if beq_nat n O then Some a else nth_error' l' (pred n)
+end.
+
+Definition option_elim (d: nat) (o : natoption) : nat :=
+  match o with
+  | Some n' => n'
+  | None => d
+end.
+
+(* Exercise hd_error *)
+
+Definition hd_error (l : natlist): natoption :=
+  match l with
+  | [] => None
+  | a :: t' => Some a
+end.
+
+Example test_hd_error1: hd_error [] = None.
+Proof. reflexivity. Qed.
+
+Example test_hd_error2 : hd_error [1] = Some 1.
+Proof. reflexivity. Qed.
+
+Example test_hd_error3 : hd_error [5;6] = Some 5.
+Proof. reflexivity. Qed.
+
+(* Exercise option_elim_hd *)
+
+Theorem option_elim_hd : forall (l: natlist) (default: nat),
+  hd default l = option_elim default (hd_error l).
+Proof.
+  induction l as [| n l' IHl'].
+  - reflexivity.
+  - reflexivity.
+Qed.
+
+(* Partial Maps *)
+
+Inductive id : Type :=
+  | Id : nat -> id.
+
+Definition beq_id (x_1 x_2 : id) :=
+  match x_1, x_2 with
+  | Id n_1, Id n_2 => beq_nat n_1 n_2
+end.
+
+Theorem beq_id_refl : forall x, true = beq_id x x.
+Proof.
+  destruct x.
+  simpl.
+  rewrite beq_nat_refl.
+  reflexivity.
+Qed.
+
+Module PartialMap.
+
+Inductive partial_map : Type :=
+  | empty : partial_map
+  | record : id -> nat -> partial_map -> partial_map.
+
+Definition update (d: partial_map) (x: id) (value : nat) : partial_map :=
+  record x value d.
+
+Fixpoint find (x: id) (d : partial_map) : natoption :=
+  match d with
+  | empty => None
+  | record y v d' => if beq_id x y
+                      then Some v
+                      else find x d'
+end.
+
+(* Exercise update_eq *)
+
+Theorem update_eq : forall (d: partial_map) (x : id) (v: nat),
+  find x (update d x v) = Some v.
+Proof.
+  intros.
+  simpl.
+  rewrite <- beq_id_refl.
+  reflexivity.
+Qed.
+
+(* Exercise udpate_neq *)
+
+Theorem update_neq : forall (d: partial_map) (x y : id) (o : nat),
+  beq_id x y = false -> find x (update d y o) = find x d.
+Proof.
+  intros.
+  simpl.
+  rewrite -> H.
+  reflexivity.
+Qed.
+
+End PartialMap.

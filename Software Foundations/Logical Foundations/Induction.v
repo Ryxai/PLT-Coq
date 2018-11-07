@@ -1,4 +1,4 @@
-Add LoadPath "C:\Users\Jonathan\source\repos\Software Foundations\Logical Foundations".
+Add LoadPath "C:\Users\Jonathan\source\repos\PLT-Coq\Software Foundations\Logical Foundations".
 Require Export Basics.
 
 Theorem plus_n_0_firsttry : forall n: nat, n = n + 0.

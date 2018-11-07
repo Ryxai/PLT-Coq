@@ -1,4 +1,4 @@
-Add LoadPath "C:\Users\Jonathan\source\repos\Software Foundations\Logical Foundations".
+Add LoadPath "C:\Users\Jonathan\source\repos\PLT-Coq\Software Foundations\Logical Foundations".
 
 Inductive day : Type :=
     | monday : day
