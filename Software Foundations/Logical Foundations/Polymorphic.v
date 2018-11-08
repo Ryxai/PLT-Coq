@@ -1,4 +1,6 @@
-Require Export List.
+Add LoadPath "C:\Users\Jonathan\source\repos\PLT-Coq\Software Foundations\Logical Foundations".
+Require Export Lists.
+
 
 Inductive list (X: Type) : Type :=
   | nil : list X
@@ -112,7 +114,7 @@ Theorem app_nil_r : forall (X : Type), forall l: list X,
 Proof.
   induction l as [| h l' IHl'].
   + reflexivity.
-  + simpl. rewrite <- IHl' at 2. reflexivity.
+  + simpl. rewrite IHl'. reflexivity.
 Qed.
 
 Theorem app_assoc : forall A (l m n : list A),
@@ -120,4 +122,100 @@ Theorem app_assoc : forall A (l m n : list A),
 Proof.
   induction l as [| h l' IHl'].
   + reflexivity.
-  + simpl.
+  + intros. simpl. rewrite <- IHl'. reflexivity.
+Qed.
+
+Lemma app_length : forall (X: Type) (l_1 l_2 : list X),
+  length (l_1 ++ l_2) = length l_1 + length l_2.
+Proof.
+  induction l_1 as [| h l_1' IHl1'].
+  - reflexivity.
+  - intros. simpl. rewrite -> IHl1'. reflexivity.
+Qed.
+
+(* Exercises more_poly exercises *)
+
+Theorem rev_app_distr : forall X (l_1 l_2 : list X),
+  rev (l_1 ++ l_2) = rev l_2 ++ rev l_1.
+Proof.
+  intros. induction l_1 as [| h l_1' IHl1'].
+  - rewrite app_nil_r. reflexivity.
+  - simpl. rewrite IHl1'. rewrite app_assoc. reflexivity.
+Qed.
+
+Theorem rev_involutive : forall X: Type, forall l : list X,
+  rev (rev l) = l.
+Proof.
+  intros. induction l as [| h l' IHl'].
+  - reflexivity.
+  - simpl. rewrite -> rev_app_distr. rewrite -> IHl'. reflexivity.
+Qed.
+
+(* Polymorphic pairs *)
+
+Inductive prod (X Y : Type) : Type :=
+  | pair : X -> Y -> prod X Y.
+
+Arguments pair {X} {Y} _ _.
+
+Notation "( x , y )" := (pair x y).
+Notation "X * Y" := (prod X Y) : type_scope.
+
+Definition fst {X Y : Type} (p : X * Y) : X :=
+  match p with
+  | (x, s) => x
+end.
+
+Definition snd {X Y : Type} (p: X * Y) : Y :=
+  match p with  
+  | (x, y) => y
+end.
+
+Fixpoint combine {X Y : Type} (lx : list X) (ly : list Y)
+  : list (X * Y) :=
+  match lx, ly with
+  | [], _ => []
+  | _, [] => []
+  | x :: tx, y :: ty => (x,y) :: (combine tx ty)
+end.
+
+(* Exercise combine_checks *)
+
+Check @combine.
+Compute (combine [1;2] [false;false;true;true]).
+
+(* Exercise split *)
+
+Fixpoint split {X Y : Type} (l : list (X*Y))
+  : (list X) * (list Y) :=
+  match l with
+  | [] => ([], [])
+  | (x, y) :: t =>
+    match split t with
+      | (xs, ys) => (x::xs, y::ys)
+    end
+end.
+
+Example test_split:
+  split [(1, false);(2, false)] = ([1;2], [false;false]).
+Proof. reflexivity. Qed.
+
+Module OptionPlayground.
+
+Inductive option (X: Type) : Type :=
+  | Some : X -> option X
+  | None : option X.
+
+Arguments Some {X} _.
+Arguments None {X}.
+
+End OptionPlayground.
+
+Fixpoint nth_error {X : Type} (l : list X) (n : nat) : option X :=
+  match l with
+  | [] => None
+  | a :: l' => if beq_nat n O 
+                then Some a 
+                else nth_error l' (pred n)
+end.
+

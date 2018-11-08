@@ -543,6 +543,8 @@ Proof.
   - reflexivity.
 Qed.
 
+
+
 (* Partial Maps *)
 
 Inductive id : Type :=
@@ -560,8 +562,9 @@ Proof.
   rewrite beq_nat_refl.
   reflexivity.
 Qed.
-
+End NatList.
 Module PartialMap.
+Export NatList.
 
 Inductive partial_map : Type :=
   | empty : partial_map
@@ -599,5 +602,4 @@ Proof.
   rewrite -> H.
   reflexivity.
 Qed.
-
 End PartialMap.
