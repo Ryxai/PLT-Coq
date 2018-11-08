@@ -219,3 +219,106 @@ Fixpoint nth_error {X : Type} (l : list X) (n : nat) : option X :=
                 else nth_error l' (pred n)
 end.
 
+Example test_nth_error1 : nth_error [4;5;6;7] 0 = Some 4.
+Proof. reflexivity. Qed.
+
+Example test_nth_error2 : nth_error [[1];[2]] 1 = Some [2].
+Proof. reflexivity. Qed.
+
+Example test_nth_error3 : nth_error [true] 2 = None.
+Proof. reflexivity. Qed.
+
+(* Exercise hd_error_poly *)
+
+Definition hd_error {X : Type} (l : list X) 
+  : option X :=
+    match l with
+    | [] => None
+    | h :: t => Some h
+end.
+
+Example test_hd_error1 : hd_error [1;2] = Some 1.
+Proof. reflexivity. Qed.
+
+Example test_hd_error2 : hd_error [[1];[2]] = Some [1].
+Proof. reflexivity. Qed.
+
+(* Functions as Data *)
+
+Definition doit3times {X: Type} (f: X -> X) (n : X) : X :=
+f (f (f (n))).
+
+Check @doit3times.
+
+Example test_doit3times : doit3times minustwo 9 = 3.
+Proof. reflexivity. Qed.
+
+Example test_doit3times': doit3times negb true = false.
+Proof. reflexivity. Qed.
+
+Fixpoint filter {X : Type} (test : X -> bool) (l : list X) : (list X) :=
+  match l with
+  | [] => []
+  | h :: t => if test h then h :: (filter test t) else filter test t
+end.
+
+Example test_filter1 : filter evenb [1;2;3;4] = [2;4].
+Proof. reflexivity. Qed.
+
+Definition length_is_1 {X : Type} (l : list X) : bool := beq_nat (length l) 1.
+
+Example test_filter2: filter length_is_1 [[1;2];[3];[4];[5;6;7];[];[8]] = [[3];[4];[8]].
+Proof. reflexivity. Qed.
+
+Definition countoddmembers' (l : list nat) : nat :=
+  length (filter oddb l).
+
+Example test_countoddmembers'1: countoddmembers' [1;0;3;1;4;5] = 4.
+Proof. reflexivity. Qed.
+
+Example test_countoddmembers'2: countoddmembers' [0;2;4] = 0.
+Proof. reflexivity. Qed.
+
+Example test_anon_fun': doit3times (fun n => n * n) 2 = 256.
+Proof. reflexivity. Qed.
+
+Example test_filter2':  filter (fun l => beq_nat (length l) 1) 
+  [[1;2];[3];[4];[5;6;7];[];[8]] = [[3];[4];[8]].
+Proof. reflexivity. Qed.
+
+(* Exercise filter_even_gt7 *)
+Definition filter_even_gt7 (l : list nat) : list nat :=
+  filter (fun n => (andb (evenb n) (negb (blt_nat n 7)))) l.
+
+Example test_filter_even_gt7_1 : filter_even_gt7 [1;2;6;9;10;3;12;8] = [10;12;8].
+Proof. reflexivity. Qed.
+
+Example test_filter_event_gt7_2 : filter_even_gt7 [5;2;6;19;129] = [].
+Proof. reflexivity. Qed.
+
+(* Exercise partition *)
+Definition partition {X : Type} (test : X -> bool) (l : list X) : list X * list X :=
+  ((filter test l), (filter (fun n => (negb (test n))) l)).
+
+Example test_partition1: partition oddb [1;2;3;4;5] = ([1;3;5], [2;4]).
+Proof. reflexivity. Qed.
+
+Example test_partition2 : partition (fun x => false) [5;9;0] = ([], [5;9;0]).
+Proof. reflexivity. Qed.
+
+Fixpoint map {X Y : Type} (f: X -> Y) (l : list X) : (list Y) :=
+  match l with 
+  | [] => []
+  | h :: t => (f h) :: (map f t)
+end.
+
+Example test_map1 : map (fun x => plus 3 x) [2;0;2] = [5;3;5].
+Proof. reflexivity. Qed.
+
+Example test_map2 : map oddb [2;1;2;5] = [false; true; false; true].
+Proof. reflexivity. Qed.
+
+Example test_map3 : map (fun n => [evenb n; oddb n]) [2;1;2;5] = 
+  [[true; false];[false;true];[true;false];[false;true]].
+Proof. reflexivity. Qed.
+
