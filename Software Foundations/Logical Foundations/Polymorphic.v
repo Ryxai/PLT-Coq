@@ -322,3 +322,154 @@ Example test_map3 : map (fun n => [evenb n; oddb n]) [2;1;2;5] =
   [[true; false];[false;true];[true;false];[false;true]].
 Proof. reflexivity. Qed.
 
+(* Exercise map_rev *)
+
+Lemma map_app_distr : forall (X Y: Type) (f : X -> Y) (l_1 l_2 : list X),
+  map f (l_1 ++ l_2) = (map f l_1) ++ (map f l_2).
+Proof.
+  intros.
+  induction l_1 as [| h_1 l_1' IHl1'].
+  - reflexivity.
+  - simpl. rewrite -> IHl1'. reflexivity.
+Qed.
+
+Theorem map_rev : forall (X Y : Type) (f : X -> Y) (l : list X),
+  map f (rev l) = rev (map f l).
+Proof.
+  intros. induction l as [| h l' IHl'].
+  - reflexivity.
+  - simpl. rewrite -> map_app_distr. rewrite IHl'. reflexivity.
+Qed.
+
+(* Exercise flat_map *)
+
+Fixpoint flat_map {X Y : Type} (f : X -> list Y) (l : list X) : (list Y) :=
+  match l with
+  | [] => []
+  | h :: t => f h ++ (flat_map f t)
+end.
+
+Example test_flat_map1: flat_map (fun n => [n; n; n]) [1;5;4] =
+  [1; 1; 1; 5; 5; 5; 4; 4; 4].
+Proof. reflexivity. Qed.
+
+Definition option_map {X Y : Type} (f : X -> Y) (xo : option X) : option Y :=
+  match xo with
+  | None => None
+  | Some x => Some (f x)
+end.
+
+Fixpoint fold {X Y : Type} (f : X -> Y -> Y) (l : list X) (b : Y) : Y :=
+  match l with 
+  | nil => b
+  | h :: t => f h (fold f t b)
+end.
+
+Check (fold andb).
+
+Example fold_example1 : fold mult [1;2;3;4] 1 = 24.
+Proof. reflexivity. Qed.
+
+Example fold_example2: fold andb [true; true; false; true] true = false.
+Proof. reflexivity. Qed.
+
+Example fold_example3: fold app [[1];[];[2;3];[4]] [] = [1;2;3;4].
+Proof. reflexivity. Qed.
+
+Definition constfun {X : Type} (x : X) : nat -> X :=
+  fun (k : nat) => x.
+
+Definition ftrue := constfun true.
+
+Example constfun_example1 : ftrue 0 = true.
+Proof. reflexivity. Qed.
+
+Example constfun_example2 : (constfun 5) 99 = 5.
+Proof. reflexivity. Qed.
+
+Check plus.
+
+Definition plus3 := plus 3.
+Check plus3.
+
+Example test_plus3 : plus3 4 = 7.
+Proof. reflexivity. Qed.
+
+Example test_plus3' : doit3times plus3 0 = 9.
+Proof. reflexivity. Qed.
+
+Example test_plus3'' : doit3times (plus 3) 0 = 9.
+Proof. reflexivity. Qed.
+
+(* Exercise fold_length *)
+
+Definition fold_length {X : Type} (l : list X) : nat :=
+  fold (fun _ n => S n) l 0.
+
+Example test_fold_length1 : fold_length [4;7;0] = 3.
+Proof. reflexivity. Qed.
+
+Theorem fold_length_correct : forall X (l : list X),
+  fold_length l = length l.
+Proof.
+  intros. induction l as [| h l' IHl'].
+  - reflexivity.
+  - simpl.
+    rewrite <- IHl'.
+    unfold fold_length.
+    reflexivity.
+Qed.
+
+(* Exercise fold_map *)
+
+Definition fold_map {X Y: Type} (f : X -> Y) (l : list X) : list Y :=
+  fold (fun h t => (f h) :: t) l [].
+
+Example test_fold_map : fold_map (fun x => x) [1;2;3;4] = [1;2;3;4].
+Proof. reflexivity. Qed.
+
+Theorem fold_map_correct : forall (X Y: Type) (f : X -> Y) (l : list X),
+  fold_map f l = map f l.
+Proof.
+  intros. induction l as [| h l' IHl'].
+  - reflexivity.
+  - simpl. 
+    rewrite <- IHl'.
+    unfold fold_map.
+    reflexivity.
+Qed.
+
+
+(* Exercise currying *)
+
+Definition prod_curry {X Y Z : Type} (f : X * Y -> Z) (x : X) (y : Y) : Z := f(x, y).
+
+Definition prod_uncurry {X Y Z : Type} (f : X -> Y -> Z) (p : X * Y) : Z := f (fst p) (snd p).
+
+Example test_map1': map (plus 3) [2;0;2] = [5;3;5].
+Proof. reflexivity. Qed.
+
+Check @prod_curry.
+Check @prod_uncurry.
+
+Theorem uncurry_curry : forall (X Y Z : Type) (f : X -> Y -> Z) x y, 
+  prod_curry (prod_uncurry f) x y = f x y.
+Proof.
+  intros.
+  unfold prod_curry.
+  unfold prod_uncurry.
+  reflexivity.
+Qed.
+
+Theorem curry_uncurry : forall (X Y Z : Type) (f : (X * Y) -> Z) (p : X * Y),
+  prod_uncurry (prod_curry f) p  = f p.
+Proof.
+  intros.
+  destruct p.
+  unfold prod_uncurry.
+  simpl.
+  unfold prod_curry.
+  reflexivity.
+Qed.
+
+
